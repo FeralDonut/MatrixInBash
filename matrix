@@ -1,0 +1,131 @@
+#!/bin/bash
+
+
+  
+
+#function for dims
+dims()
+{
+  rowNum=0
+
+  #parse through the file and count how many rows there are 
+  #source lecture 1.4
+  while read myLine
+  do
+    rowNum=`expr $rowNum + 1`
+  done < $matrixFile
+
+  #count the number of columns by counting elements in the first line of the matrixFile
+  colNum=$( head -n 1 $matrixFile | wc -w)  
+  echo -e "$rowNum $colNum"
+}
+
+
+mean()
+{
+
+  i=1
+
+  #find the number of columns in the matrix
+  numcol=$( head -n 1 $matrixFile | wc -w)	
+
+  #loop through for each 
+  while [[ $i -le $numcol ]]
+  do
+     
+  count=0
+  sum=0
+  cut -f $i $matrixFile > $tempCol
+
+  #refernce lecture 1.4
+  while read currentNum
+  do
+     sum=`expr $sum + $currentNum`
+     count=`expr $count + 1`
+  done <$tempCol
+
+#equation from project 1 specs for calculating mean with proper rounding
+mean=$(((sum + (count/2)*( (sum>0)*2-1 )) / count))
+
+
+echo "$mean" > "$tempMean"
+cat $tempMean$$ | tr "\n" "\t" > "$tempRow"
+
+#remove trailing tabs
+if [[ $i -eq $numcol ]]
+then
+rev "$tempRow" >"temp222"
+cat "temp222" | cut -c 2- >"temp333"
+rev "temp333">$tempRow
+fi
+
+cat $tempRow
+
+i=$((i+1))
+
+done
+
+rm -f temp*
+
+}
+
+
+  #count the number of arguments passed in
+  argNum=$#
+
+  tempMean="temporary mean file"
+  tempCol="temporary column file"
+  tempRow="temporary row file"
+  #DIMS & TRANSPOSE & MEAN
+
+  #Since dims and mean both only need one matrix will check to see if dims or mean was passed
+  #as the first argument before checking the number of matrices passed
+  if [ $1 = "dims" ] || [ $1 = "transpose" ] || [ $1 = "mean" ]
+    then
+
+      #print to stderr if too many arguments are passed in
+      if (("$argNum" > 2 ))
+      then
+          echo "Too many arguments for $1" 1>&2
+          exit 1
+        fi
+
+      #print to stderr if the file is not readable
+      #source on how to tell a file is readable
+      #https://askubuntu.com/questions/558977/checking-for-a-file-and-whether-it-is-readable-and-writable
+      if [ ! -r $2 ]
+      then
+       echo "$2 is not a readable file" 1>&2
+       exit 1
+      fi
+
+
+      if [ $# -gt 1 ]
+      then
+         matrixFile=$2
+       fi
+
+
+      if [ $1 = "dims" ]
+      then
+        dims $matrixFile
+      fi
+
+      if [ $1 = "mean" ]
+      then
+	      mean $matrixFile
+      fi
+
+      if [ $1 = "transpose" ]
+      then
+        transpose $matrixFile
+      fi
+
+
+    fi
+
+
+
+
+rm -f temp*
+
