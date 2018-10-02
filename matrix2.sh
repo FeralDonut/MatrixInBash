@@ -146,36 +146,39 @@ mulitply()
   echo "Multiply Function"
 }
 
+  #count the number of arguments passed in
+  argNum=$#
 
-#Executing dims and mean
+
+  #Since dims and mean both only need one matrix will check to see if dims or mean was passed
+  #as the first argument before checking the number of matrices passed
   if [ $1 = "dims" ] || [ $1 = "mean" ]
     then
 
-
-      if (("$#" > 2 ))
+      #print to stderr if too many arguments are passed in
+      if (("$argNum" > 2 ))
       then
-          echo "Invalid number of arguments" 1>&2
+          echo "Too many arguments for $1" 1>&2
           exit 1
         fi
 
-        if [ $# -gt 1 ]
-        then
-           matrixFile=$2
-           fileTwo=$3
-         fi
-
-        if [ $# -eq 1 ]
-        then
-           matrixFile=tmp
-           cat > $matrixFile
-           #echo "Cat has finished"
-        fi
-
-      if [ ! -f $2 ]
-        then
-          echo "Invalid file" 1>&2        #Redirects stdout to stderr 1>&2
-          exit 1
+      #print to stderr if the file is not readable
+      #source on how to tell a file is readable
+      #https://askubuntu.com/questions/558977/checking-for-a-file-and-whether-it-is-readable-and-writable
+      if [ $2 != -r ]
+      then
+       echo "$2 is not a readable file" 1>&2
+       exit 1
       fi
+
+      
+      if [ $# -gt 1 ]
+      then
+         matrixFile=$2
+       fi
+
+
+   
 
       if [ $1 = "dims" ]
       then
