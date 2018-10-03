@@ -1,0 +1,196 @@
+#!/bin/bash
+
+
+
+  tempMean="temporary mean file"
+  tempCol="temporary column file"
+  tempRow="temporary row file"
+  tempMat="temporary matrix file"
+  
+
+#function for dims
+dims()
+{
+  rowNum=0
+
+  #parse through the file and count how many rows there are 
+  #source lecture 1.4
+  while read myLine
+  do
+    rowNum=`expr $rowNum + 1`
+  done < $matrixFile
+
+  #count the number of columns by counting elements in the first line of the matrixFile
+  colNum=$( head -n 1 $matrixFile | wc -w)  
+  echo -e "$rowNum $colNum"
+
+}
+
+
+transpose()
+{
+
+  cat "$matrixFile" > tempRow1$$
+
+  #count the number of columns
+  #reference for wc -l https://www.tecmint.com/wc-command-examples/
+   colNum=$( head -n 1 $matrixFile | wc -w)  
+  #col="$(head -1 tempRow1$$ | tr '\t' '\n' | wc -l)"
+  #count rows
+  row="$(wc -l < tempRow1$$)"
+  i=0
+  while [ $i -lt $colNum ] 
+  do
+    #increment counter
+    i=$((i+1))
+    #cut A and send to B for Transposition
+    cat tempRow1$$ | cut -f "$i" >>tempMat
+    cat tempMat | tr '\n' '\t' > tempMat
+    cat tempMat | cut -f -"$row" > tempMat
+
+
+   # cat tempRow1$$ | cut -f "$i" > tempRowB$$ | tr '\n' '\t' | cut -f -"$row" >> tempRowB$$
+  
+  done
+  cat tempMat
+}
+
+mean ()
+{
+  echo "in mean"
+   
+
+}
+
+add()
+{
+  echo "in add"
+
+}
+
+multiply()
+{
+  echo "in multiply"
+
+}
+
+trapCatch()
+{
+  rm -f temp*
+  exit 1
+}
+
+  #DIMS & TRANSPOSE & MEAN
+
+  #Since dims and mean both only need one matrix will check to see if dims or mean was passed
+  #as the first argument before checking the number of matrices passed
+  if [ $1 = "dims" ] || [ $1 = "transpose" ] || [ $1 = "mean" ]
+    then
+
+      #print to stderr if too many arguments are passed in
+      if (( $# > 2 ))
+      then
+          echo "Too many arguments for $1" 1>&2
+          exit 1
+      fi
+
+      #check to see if anything was passed in with function name
+      if [ $# -eq 1 ]
+        then
+           matrixFile=temp
+           cat > $matrixFile
+
+      fi
+    
+
+      #print to stderr if the file is not readable
+      #source on how to tell a file is readable
+      #https://askubuntu.com/questions/558977/checking-for-a-file-and-whether-it-is-readable-and-writable
+      if [ ! -r $2 ]
+      then
+       echo "$2 is not a readable file" 1>&2
+       exit 1
+      fi
+
+
+      if [ $# -gt 1 ]
+      then
+         matrixFile=$2
+       fi
+
+
+      if [ $1 = "dims" ]
+      then
+        dims $matrixFile
+      fi
+
+      if [ $1 = "mean" ]
+      then
+	      mean $matrixFile
+      fi
+
+      if [ $1 = "transpose" ]
+      then
+        transpose $matrixFile
+      fi
+
+
+    fi
+
+    #ADD
+    if [ $1 = "add" ]
+    then
+
+      #Check to see if enough arguments have been passed
+      if [ $# -ne 3 ]
+      then
+        echo "Invalid number of arguments" 1>&2
+        exit 1
+      fi
+
+      #Check to see that both files are readable
+      if [ ! -r $2 ] || [ ! -r $3 ]
+      then
+        echo "One or more of your files are not readable" 1>&2
+        exit 1
+      fi
+
+      if [ $# -eq 3 ]
+      then
+         matrixOne=$2
+         matrixTwo=$3
+      fi
+
+      #Check to see that the files are the same dimensions
+      rowMatOne=0
+      rowMatTwo=0                                                        
+      colMatOne=$( head -n 1 $matrixOne | wc -w)  
+      colMatTwo=$( head -n 1 $matrixTwo | wc -w)                              
+      #totalNum=0
+
+      while read myLine
+      do
+         rowMatOne=`expr $rowMatOne + 1`
+      done <$matrixOne
+                                                                        
+      while read myLine
+      do
+         rowMatTwo=`expr $rowMatTwo + 1`
+      done <$fileTwo
+                
+     # totalNum=$((rowMatOne * colMatOne))
+
+      if [ $numcolOne -ne $numcolTwo ] || [ $rowNumOne -ne $rowNumTwo ]
+      then
+         echo "You must have the same dimensions" 1>&2
+         exit 1
+      fi
+
+
+  add $matrixFile $fileTwo
+  fi
+
+trap trapCatch
+
+rm -f temp*
+
