@@ -11,15 +11,9 @@
 #function for dims
 dims()
 {
-  rowNum=0
-
-  #parse through the file and count how many rows there are 
-  #source lecture 1.4
-  while read myLine
-  do
-    rowNum=`expr $rowNum + 1`
-  done < $matrixFile
-
+  #count rows
+  #reference for wc -l https://www.tecmint.com/wc-command-examples/
+  rowNum="$(wc -l < matrixFile)"
   #count the number of columns by counting elements in the first line of the matrixFile
   colNum=$( head -n 1 $matrixFile | wc -w)  
   echo -e "$rowNum $colNum"
@@ -34,16 +28,22 @@ transpose()
 
   #count the number of columns by counting elements in the first line of the matrixFile
   colNum=$( head -n 1 $matrixFile | wc -w) 
-
+ 
   #count rows
   #reference for wc -l https://www.tecmint.com/wc-command-examples/
   row="$(wc -l < tempRow1$$)"
+
   i=0
   while [ $i -lt $colNum ]
   do
+
+    
+    #increment counter
     i=$((i+1))
-    #cut A and send to B for Transposition
+    #Transpose from tempRow1 to tempRow2 of the temp from PID
     cat tempRow1$$ | cut -f "$i" | tr '\n' '\t' | cut -f -"$row" >> tempRow2$$
+
+
   done
   cat tempRow2$$
 
@@ -53,6 +53,43 @@ transpose()
 mean ()
 {
   echo "in mean"
+
+  i=1
+
+  #count columns
+  numcol=$( head -n 1 $matrixFile | wc -w) 
+
+  #loop through each column
+  while [[ $i -le $numcol ]]
+  do
+       
+    count=0
+    sum=0
+    cut -f $i $matrixFile > $tempCol
+
+
+    while read num
+    do
+       sum=`expr $sum + $num`
+       count=`expr $count + 1`
+       echo "sum = $sum"
+    done <$tempCol
+
+  #Equation given to us in program description
+  mean=$(((sum + (count/2)*( (sum>0)*2-1 )) / count))
+
+  echo "mean = $mean"
+  echo "$mean" > "$tempMean"
+  cat $tempMean | tr "\n" "\t" > "$tempRow"
+
+
+  cat $tempMean
+
+  i=$((i+1))
+
+done
+
+rm -f temp*
    
 
 }
