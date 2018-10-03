@@ -32,27 +32,22 @@ transpose()
 
   cat "$matrixFile" > tempRow1$$
 
-  #count the number of columns
-  #reference for wc -l https://www.tecmint.com/wc-command-examples/
-   colNum=$( head -n 1 $matrixFile | wc -w)  
-  #col="$(head -1 tempRow1$$ | tr '\t' '\n' | wc -l)"
+  #count the number of columns by counting elements in the first line of the matrixFile
+  colNum=$( head -n 1 $matrixFile | wc -w) 
+
   #count rows
+  #reference for wc -l https://www.tecmint.com/wc-command-examples/
   row="$(wc -l < tempRow1$$)"
   i=0
-  while [ $i -lt $colNum ] 
+  while [ $i -lt $colNum ]
   do
-    #increment counter
     i=$((i+1))
     #cut A and send to B for Transposition
-    cat tempRow1$$ | cut -f "$i" >>tempMat
-    cat tempMat | tr '\n' '\t' > tempMat
-    cat tempMat | cut -f -"$row" > tempMat
-
-
-   # cat tempRow1$$ | cut -f "$i" > tempRowB$$ | tr '\n' '\t' | cut -f -"$row" >> tempRowB$$
-  
+    cat tempRow1$$ | cut -f "$i" | tr '\n' '\t' | cut -f -"$row" >> tempRow2$$
   done
-  cat tempMat
+  cat tempRow2$$
+
+  rm -f tempRow*
 }
 
 mean ()
@@ -190,7 +185,9 @@ trapCatch()
   add $matrixFile $fileTwo
   fi
 
-trap trapCatch
+#trap trapCatch 
+trap "rm -f $temp*;  exit 1" INT
+
 
 rm -f temp*
 
