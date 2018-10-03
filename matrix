@@ -1,21 +1,16 @@
 #!/bin/bash
 
 
-
-  tempMean="temporary mean file"
-  tempCol="temporary column file"
-  tempRow="temporary row file"
-  tempMat="temporary matrix file"
-  
-
 #function for dims
 dims()
 {
   #count rows
   #reference for wc -l https://www.tecmint.com/wc-command-examples/
-  rowNum="$(wc -l < matrixFile)"
+  rowNum="$(wc -l < $matrixFile)"
+
   #count the number of columns by counting elements in the first line of the matrixFile
   colNum=$( head -n 1 $matrixFile | wc -w)  
+
   echo -e "$rowNum $colNum"
 
 }
@@ -54,15 +49,22 @@ mean ()
 {
   echo "in mean"
 
-  i=1
+  tempMean="temporary mean file"
+  #tempCol="temporary column file"
 
-  #count columns
-  numcol=$( head -n 1 $matrixFile | wc -w) 
+  i=0
+
+   #count the number of columns by counting elements in the first line of the matrixFile
+  colNum=$( head -n 1 $matrixFile | wc -w) 
+
+  cat "$matrixFile" > tempCol
 
   #loop through each column
-  while [[ $i -le $numcol ]]
+  while [[ $i -le $numCol ]]
   do
-       
+    #increment the counter
+    i=$((i+1))
+
     count=0
     sum=0
     cut -f $i $matrixFile > $tempCol
@@ -85,7 +87,7 @@ mean ()
 
   cat $tempMean
 
-  i=$((i+1))
+  
 
 done
 
@@ -193,33 +195,20 @@ trapCatch()
          matrixTwo=$3
       fi
 
-      #Check to see that the files are the same dimensions
-      rowMatOne=0
-      rowMatTwo=0                                                        
+      #grab row and column for each matrix                                                                
       colMatOne=$( head -n 1 $matrixOne | wc -w)  
+      rowMatOne=$(wc -l < $matrixOne)
       colMatTwo=$( head -n 1 $matrixTwo | wc -w)                              
-      #totalNum=0
+      rowMatTwo=$(wc -l < $matrixTwo)  
 
-      while read myLine
-      do
-         rowMatOne=`expr $rowMatOne + 1`
-      done <$matrixOne
-                                                                        
-      while read myLine
-      do
-         rowMatTwo=`expr $rowMatTwo + 1`
-      done <$fileTwo
-                
-     # totalNum=$((rowMatOne * colMatOne))
-
-      if [ $numcolOne -ne $numcolTwo ] || [ $rowNumOne -ne $rowNumTwo ]
+      #compare the rows and columns to make sure they are the same dimension
+      if [ $colMatOne -ne $colMatTwo ] || [ $rowMatOne -ne $rowMatTwo ]
       then
-         echo "You must have the same dimensions" 1>&2
+         echo "Matrices not the same dimension" 1>&2
          exit 1
       fi
 
-
-  add $matrixFile $fileTwo
+  add $matrixOne $matrixTwo
   fi
 
 #trap trapCatch 
