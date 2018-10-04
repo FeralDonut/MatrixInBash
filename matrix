@@ -26,7 +26,7 @@ transpose()
  
   #count rows
   #reference for wc -l https://www.tecmint.com/wc-command-examples/
-  row="$(wc -l < tempRow1$$)"
+  rowNum="$(wc -l < tempRow1$$)"
 
   i=0
   while [ $i -lt $colNum ]
@@ -36,7 +36,7 @@ transpose()
     #increment counter
     i=$((i+1))
     #Transpose from tempRow1 to tempRow2 of the temp from PID
-    cat tempRow1$$ | cut -f "$i" | tr '\n' '\t' | cut -f -"$row" >> tempRow2$$
+    cat tempRow1$$ | cut -f "$i" | tr '\n' '\t' | cut -f -"$rowNum" >> tempRow2$$
 
 
   done
@@ -47,34 +47,27 @@ transpose()
 
 mean ()
 {
-  echo "in mean"
-
   tempMean="temporary mean file"
-  #tempCol="temporary column file"
+  tempCol="temporary column file"
 
-  i=0
+  i=1
 
-   #count the number of columns by counting elements in the first line of the matrixFile
+  #count the number of columns by counting elements in the first line of the matrixFile
   colNum=$( head -n 1 $matrixFile | wc -w) 
 
-  cat "$matrixFile" > tempCol
 
   #loop through each column
-  while [[ $i -le $numCol ]]
+  while [[ $i -le $colNum ]]
   do
-    #increment the counter
-    i=$((i+1))
-
     count=0
     sum=0
     cut -f $i $matrixFile > $tempCol
-
 
     while read num
     do
        sum=`expr $sum + $num`
        count=`expr $count + 1`
-       echo "sum = $sum"
+      
     done <$tempCol
 
   #Equation given to us in program description
@@ -82,12 +75,14 @@ mean ()
 
   echo "mean = $mean"
   echo "$mean" > "$tempMean"
-  cat $tempMean | tr "\n" "\t" > "$tempRow"
+ # cat $tempMean | tr "\n" "\t" > "$tempRow"
+
 
 
   cat $tempMean
 
-  
+  #increment the counter
+    i=$((i+1))
 
 done
 
@@ -98,13 +93,111 @@ rm -f temp*
 
 add()
 {
-  echo "in add"
+  touch tempmatrix_0$$
+  #count the number of columns by counting elements in the first line of the matrixFile
+  colNum=$( head -n 1 $matrixOne | wc -w) 
+  rowNum="$(wc -l < $matrixOne )" 
+
+  i=1
+  #do the adding
+  while [ $i -le $colNum ]
+  do
+    num=$((i-1))
+    #cut from matrix 1 and 2
+    cat $matrixOne | cut -f "$i" > tempMat1$$ 
+    cat $matrixTwo | cut -f "$i" > tempMat2$$ 
+    
+    j=1
+    while [ $j -le $rowNum ]
+    do
+      #set two numbers to be added together to appropriate variables
+      tempNum1="$(cat tempMat1$$ | head -n "$j" | tail -n 1)"
+      tempNum2="$(cat tempMat2$$ | head -n "$j" | tail -n 1)"
+      
+      #sum the two numbers together
+      sum=`expr $tempNum1 + $tempNum2`
+
+      #store sum in a third file
+      echo "$sum" >> tempAddMat$i$$
+
+      #increment counter
+      j=$((j+1))
+    done
+
+    paste tempmatrix_$num$$ tempAddMat$i$$ > tempmatrix_$i$$
+
+    #increment the counter
+    i=$((i+1))
+  done
+
+  whitespace=$((colNum+1))
+  #cut the whitespace as previously done
+  cat tempmatrix_$colNum$$ | cut -f 2-"$whitespace" > tempSumMat$$ 
+  #send the temp files on a dumpster dive
+
+  cat tempSumMat$$
 
 }
 
 multiply()
 {
   echo "in multiply"
+
+  i=1
+
+  #count the number of columns by counting elements in the first line of the matrixFile
+  colOneNum=$( head -n 1 $matrixOne | wc -w) 
+  colTwoNum=$( head -n 1 $matrixTwo | wc -w) 
+
+  #count the number of rows in each matrix
+  rowOneNum="$(wc -l < $matrixOne )"
+  rowTwoNum="$(wc -l < $matrixTwo )"
+
+
+   touch tempmatrix_0$$
+  #count the number of columns by counting elements in the first line of the matrixFile
+  colNum=$( head -n 1 $matrixOne | wc -w) 
+  rowNum="$(wc -l < $matrixOne )" 
+
+  i=1
+  #do the adding
+  while [ $i -le $colTwoNum ]
+  do
+    num=$((i-1))
+    #cut from matrix 1 and 2
+    #cat $matrixOne | cut -f "$i" > tempMat1$$ 
+    cat $matrixTwo | cut -f "$i" > tempCol2$$ 
+  
+  
+  #now find the proper element from the first matrix
+  j=1
+  
+  #set two numbers to be added together to appropriate variables
+  tempRow1="$(cat tempMat1$$ | head -n "$j" | tail -n 1)"
+  #tempNum2="$(cat tempMat2$$ | head -n "$j" | tail -n 1)"
+  
+  #sum the two numbers together
+  product=`expr $tempRow1 + $tempCol2`
+
+  #store sum in a third file
+  echo "$product" >> tempMultMat$i$$
+
+  #increment counter
+  j=$((j+1))
+
+
+  paste tempmatrix_$num$$ tempMultMat$i$$ > tempmatrix_$i$$
+
+    #increment the counter
+    i=$((i+1))
+  done
+
+  whitespace=$((colNum+1))
+  #cut the whitespace as previously done
+  cat tempmatrix_$colNum$$ | cut -f 2-"$whitespace" > tempSumMat$$ 
+  #send the temp files on a dumpster dive
+
+  cat tempSumMat$$
 
 }
 
@@ -210,6 +303,48 @@ trapCatch()
 
   add $matrixOne $matrixTwo
   fi
+
+  #Multiply
+  if [ $1 = "multiply" ]
+  then
+
+    #Check to see if enough arguments have been passed
+    if [ $# -ne 3 ]
+    then
+      echo "Invalid number of arguments" 1>&2
+      exit 1
+    fi
+
+    #Check to see that both files are readable
+    if [ ! -r $2 ] || [ ! -r $3 ]
+    then
+      echo "One or more of your files are not readable" 1>&2
+      exit 1
+    fi
+
+    if [ $# -eq 3 ]
+    then
+       matrixOne=$2
+       matrixTwo=$3
+    fi
+
+    #grab row number from first matrix and column count for second matrix                                                                
+    
+    colMatOne=$( head -n 1 $matrixOne | wc -w)  
+    rowMatOne=$(wc -l < $matrixOne)
+    colMatTwo=$( head -n 1 $matrixTwo | wc -w)                              
+    rowMatTwo=$(wc -l < $matrixTwo)                             
+
+    #compare the rows and columns to make sure they are the same dimension
+    if [ $rowMatOne -ne $colMatTwo ] || [ $rowMatTwo -ne $colMatOne ]
+    then
+       echo "Number of rows from one matrix must match the number of columns from the other matrix" 1>&2
+       exit 1
+    fi
+
+multiply $matrixOne $matrixTwo
+fi
+
 
 #trap trapCatch 
 trap "rm -f $temp*;  exit 1" INT
