@@ -151,7 +151,7 @@ add()
 
 multiply()
 {
-  echo "in multiply"
+
 
   i=1
 
@@ -166,28 +166,31 @@ multiply()
 #read in matrixOne into an array   
 for((i=0;i<$rowOneNum;i++ ))
 do
+
     j=$((i+1))
    
-    the_row="$(cat $m1 | head -n $j | tail -n 1)"
+    the_row="$(cat $matrixOne | head -n $j | tail -n 1)"
     echo $the_row > aa
     for((ii=0;ii<$colOneNum;ii++ ))
     do
+
         jj=$((ii+1))
         #cutting the column
         varb=$(cut -f $jj -d " " aa)
         #calculating the index spot
-        index=$((i*ncols+ii))
+        index=$((i*colOneNum+ii))
         #placing into the array
         mat1Array[$index]=$varb
     done
 done
+
 
 #read in matrixTwo into an array   
 for((i=0;i<$rowTwoNum;i++ ))
 do
     j=$((i+1))
    
-    the_row="$(cat $m1 | head -n $j | tail -n 1)"
+    the_row="$(cat $matrixTwo | head -n $j | tail -n 1)"
     echo $the_row > aa
     for((ii=0;ii<$colTwoNum;ii++ ))
     do
@@ -195,28 +198,40 @@ do
         #cutting the column
         varb=$(cut -f $jj -d " " aa)
         #calculating the index spot
-        index=$((i*ncols+ii))
+        index=$((i*colTwoNum+ii))
         #placing into the array
         mat2Array[$index]=$varb
     done
 done
 
 
+
+for ((i=0; i<$rowOneNum; i++))
+do
     for ((j=0; j<$colTwoNum; j++))
     do
-        result=0
+
+       
+result=0
         for ((k=0; k<$rowOneNum; k++))
         do
-          idx1=$(( i*$rowOneNum+k ))
-          idx2=$(( k*$colTwoNum+j ))
-          result=$(( result+${mat1Arrayy}[idx1]*${mat2Array}[idx2] ))
+          idx1=$(( i*rowOneNum+k ))
+
+          idx2=$(( k*colTwoNum+j ))
+
+          v1=${mat1Array[idx1]}
+          v2=${mat2Array[idx2]}
+          result=$(( result+v1*v2 ))
+
+
         done
 
         idx3=$(( i*$colTwoNum+j ))
         product[$idx3]=$result
     done
-
-
+done
+echo "product:"
+printf '%s\n' "${product[@]}"
 
 }
 
