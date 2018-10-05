@@ -230,9 +230,24 @@ result=0
         product[$idx3]=$result
     done
 done
-echo "product:"
-printf '%s\n' "${product[@]}"
+#echo "product:"
+#printf '%s\n' "${product[@]}"
 
+for ((i=0; i<$rowOneNum; i++))
+do
+    for ((j=0; j<$rowOneNum; j++))
+    do
+      idx3=$(( i*$colTwoNum+j ))
+      echo -n ${product[idx3]} >> tempMultMat
+      if [ $j -lt $(( rowOneNum-1 )) ]
+      then
+        echo -n -e "\t" >> tempMultMat
+      else
+        echo "" >> tempMultMat
+      fi
+    done
+done
+cat tempMultMat
 }
 
 trapCatch()
