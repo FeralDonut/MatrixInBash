@@ -47,15 +47,16 @@ transpose()
 
 mean ()
 {
-  tempMean="temporary mean file"
-  tempCol="temporary column file"
+  tempMean="temporaryMeanFile"
+  tempCol="tempColumnFile"
+  tempRow="tempRowFile"
 
-  i=1
+  
 
   #count the number of columns by counting elements in the first line of the matrixFile
   colNum=$( head -n 1 $matrixFile | wc -w) 
 
-
+  i=1
   #loop through each column
   while [[ $i -le $colNum ]]
   do
@@ -73,18 +74,25 @@ mean ()
   #Equation given to us in program description
   mean=$(((sum + (count/2)*( (sum>0)*2-1 )) / count))
 
-  echo "mean = $mean"
-  echo "$mean" > "$tempMean"
- # cat $tempMean | tr "\n" "\t" > "$tempRow"
+ echo "$mean" > "$tempMean"
+#cat $tempMean | tr "\n" "\t" > "$tempRow"
 
 
 
-  cat $tempMean
+  emptyTab=$((colNum+1))
+  #cut the emtpy tab that shows up at the beginning
+  cat $tempMean | cut -f 2-"$emptyTab" | tr "\n" "\t" > $tempRow
+
+  #send the temp files on a dumpster dive
+
+  cat $tempRow 
+
 
   #increment the counter
     i=$((i+1))
 
 done
+
 
 rm -f temp*
    
@@ -93,7 +101,7 @@ rm -f temp*
 
 add()
 {
-  touch tempmatrix_0$$
+  touch tempMatrix_0$$
   #count the number of columns by counting elements in the first line of the matrixFile
   colNum=$( head -n 1 $matrixOne | wc -w) 
   rowNum="$(wc -l < $matrixOne )" 
@@ -117,26 +125,25 @@ add()
       #sum the two numbers together
       sum=`expr $tempNum1 + $tempNum2`
 
-      #store sum in a third file
+      #store sum in a third file using PID
       echo "$sum" >> tempAddMat$i$$
 
       #increment counter
       j=$((j+1))
     done
 
-    paste tempmatrix_$num$$ tempAddMat$i$$ > tempmatrix_$i$$
+    paste tempMatrix_$num$$ tempAddMat$i$$ > tempMatrix_$i$$
 
     #increment the counter
     i=$((i+1))
   done
 
-  whitespace=$((colNum+1))
-  #cut the whitespace as previously done
-  cat tempmatrix_$colNum$$ | cut -f 2-"$whitespace" > tempSumMat$$ 
+  emptyTab=$((colNum+1))
+  #cut the emtpy tab that shows up at the beginning
+  cat tempMatrix_$colNum$$ | cut -f 2-"$emptyTab" > tempSumMat$$ 
   #send the temp files on a dumpster dive
 
   cat tempSumMat$$
-
 }
 
 multiply()
@@ -153,52 +160,30 @@ multiply()
   rowOneNum="$(wc -l < $matrixOne )"
   rowTwoNum="$(wc -l < $matrixTwo )"
 
-
-   touch tempmatrix_0$$
-  #count the number of columns by counting elements in the first line of the matrixFile
-  colNum=$( head -n 1 $matrixOne | wc -w) 
-  rowNum="$(wc -l < $matrixOne )" 
-
-  i=1
-  #do the adding
-  while [ $i -le $colTwoNum ]
+  #parse through both matrix for multiplication
+  #reference: https://which-dwarf-are-you.blogspot.com/2015/06/bash-matrix-multiplication.html
+  for ((i=0; i < $rowOneNum; i++ ))
   do
-    num=$((i-1))
-    #cut from matrix 1 and 2
-    #cat $matrixOne | cut -f "$i" > tempMat1$$ 
-    cat $matrixTwo | cut -f "$i" > tempCol2$$ 
-  
-  
-  #now find the proper element from the first matrix
-  j=1
-  
-  #set two numbers to be added together to appropriate variables
-  tempRow1="$(cat tempMat1$$ | head -n "$j" | tail -n 1)"
-  #tempNum2="$(cat tempMat2$$ | head -n "$j" | tail -n 1)"
-  
-  #sum the two numbers together
-  product=`expr $tempRow1 + $tempCol2`
+    for ((j=0; j<$colTwoNum; j++))
+    do
+        result=0
+        for ((k=0; k<$rowOneNum; k++))
+        do
+          idx1=$(( i*$rowOneNum+k ))
+          idx2=$(( k*$colTwoNum+j ))
+          result=$(( result+${matrixOne}[idx1]*${matrixTwo}[idx2] ))
+        done
 
-  #store sum in a third file
-  echo "$product" >> tempMultMat$i$$
-
-  #increment counter
-  j=$((j+1))
-
-
-  paste tempmatrix_$num$$ tempMultMat$i$$ > tempmatrix_$i$$
-
-    #increment the counter
-    i=$((i+1))
+        idx3=$(( i*$colTwoNum+j ))
+        product[$idx3]=$result
+    done
   done
-
-  whitespace=$((colNum+1))
-  #cut the whitespace as previously done
-  cat tempmatrix_$colNum$$ | cut -f 2-"$whitespace" > tempSumMat$$ 
-  #send the temp files on a dumpster dive
-
-  cat tempSumMat$$
-
+  
+    for i in "${product[@]}"
+    do
+      echo 1
+    done
+   
 }
 
 trapCatch()
