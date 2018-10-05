@@ -51,8 +51,6 @@ mean ()
   tempCol="tempColumnFile"
   tempRow="tempRowFile"
 
-  
-
   #count the number of columns by counting elements in the first line of the matrixFile
   colNum=$( head -n 1 $matrixFile | wc -w) 
 
@@ -78,13 +76,16 @@ mean ()
 #cat $tempMean | tr "\n" "\t" > "$tempRow"
 
 
-
+  if [ $i -lt  $((colNum)) ]
+  then
+  
   emptyTab=$((colNum+1))
-  #cut the emtpy tab that shows up at the beginning
-  cat $tempMean | cut -f 2-"$emptyTab" | tr "\n" "\t" > $tempRow
-
+    #cut the emtpy tab that shows up at the beginning
+    cat $tempMean | cut -f 2-"$emptyTab" | tr "\n" "\t" > $tempRow
+  else
+    cat $tempMean > $tempRow
+  fi
   #send the temp files on a dumpster dive
-
   cat $tempRow 
 
 
@@ -92,6 +93,8 @@ mean ()
     i=$((i+1))
 
 done
+
+#new line
 
 
 rm -f temp*
@@ -160,10 +163,45 @@ multiply()
   rowOneNum="$(wc -l < $matrixOne )"
   rowTwoNum="$(wc -l < $matrixTwo )"
 
-  #parse through both matrix for multiplication
-  #reference: https://which-dwarf-are-you.blogspot.com/2015/06/bash-matrix-multiplication.html
-  for ((i=0; i < $rowOneNum; i++ ))
-  do
+#read in matrixOne into an array   
+for((i=0;i<$rowOneNum;i++ ))
+do
+    j=$((i+1))
+   
+    the_row="$(cat $m1 | head -n $j | tail -n 1)"
+    echo $the_row > aa
+    for((ii=0;ii<$colOneNum;ii++ ))
+    do
+        jj=$((ii+1))
+        #cutting the column
+        varb=$(cut -f $jj -d " " aa)
+        #calculating the index spot
+        index=$((i*ncols+ii))
+        #placing into the array
+        mat1Array[$index]=$varb
+    done
+done
+
+#read in matrixTwo into an array   
+for((i=0;i<$rowTwoNum;i++ ))
+do
+    j=$((i+1))
+   
+    the_row="$(cat $m1 | head -n $j | tail -n 1)"
+    echo $the_row > aa
+    for((ii=0;ii<$colTwoNum;ii++ ))
+    do
+        jj=$((ii+1))
+        #cutting the column
+        varb=$(cut -f $jj -d " " aa)
+        #calculating the index spot
+        index=$((i*ncols+ii))
+        #placing into the array
+        mat2Array[$index]=$varb
+    done
+done
+
+
     for ((j=0; j<$colTwoNum; j++))
     do
         result=0
@@ -171,19 +209,15 @@ multiply()
         do
           idx1=$(( i*$rowOneNum+k ))
           idx2=$(( k*$colTwoNum+j ))
-          result=$(( result+${matrixOne}[idx1]*${matrixTwo}[idx2] ))
+          result=$(( result+${mat1Arrayy}[idx1]*${mat2Array}[idx2] ))
         done
 
         idx3=$(( i*$colTwoNum+j ))
         product[$idx3]=$result
     done
-  done
-  
-    for i in "${product[@]}"
-    do
-      echo 1
-    done
-   
+
+
+
 }
 
 trapCatch()
