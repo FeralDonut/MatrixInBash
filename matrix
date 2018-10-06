@@ -149,7 +149,7 @@ add()
   cat tempSumMat$$
 }
 
-multiply()
+multiplyLEP()
 {
 
 
@@ -191,7 +191,7 @@ do
     j=$((i+1))
    
     the_row="$(cat $matrixTwo | head -n $j | tail -n 1)"
-    echo $the_row > aa
+    echo $the_row > tempMat
     for((ii=0;ii<$colTwoNum;ii++ ))
     do
         jj=$((ii+1))
@@ -230,16 +230,15 @@ result=0
         product[$idx3]=$result
     done
 done
-#echo "product:"
-#printf '%s\n' "${product[@]}"
 
 for ((i=0; i<$rowOneNum; i++))
 do
-    for ((j=0; j<$rowOneNum; j++))
+    for ((j=0; j<$colTwoNum; j++))
     do
       idx3=$(( i*$colTwoNum+j ))
       echo -n ${product[idx3]} >> tempMultMat
-      if [ $j -lt $(( rowOneNum-1 )) ]
+
+      if [ $j -lt $(( colTwoNum-1 )) ]
       then
         echo -n -e "\t" >> tempMultMat
       else
@@ -249,6 +248,51 @@ do
 done
 cat tempMultMat
 }
+
+multiply()
+{
+  
+  n=0
+  m=0
+  product=0
+  #count the number of columns by counting elements in the first line of the matrixFile
+  colOneNum=$( head -n 1 $matrixOne | wc -w) 
+  colTwoNum=$( head -n 1 $matrixTwo | wc -w) 
+
+  #count the number of rows in each matrix
+  rowOneNum="$(wc -l < $matrixOne )"
+  rowTwoNum="$(wc -l < $matrixTwo )"
+
+  #cut rows from matrixOne
+  while [ $n -le $rowOneNum ]
+  do
+    num=$((n-1))
+    cat $matrixOne | head -n $n > tempMat1$1$$
+  done
+  #cut columns from matrixTwo
+  while [ $m -le $colTwoNum ]
+  do
+    num=$((m-1))
+    cat $matrixTwo | cut -f "$m" > tempMat2$j$$ 
+ done
+
+for ((i=0; i<$rowOneNum; i++))
+do
+    
+    for ((j=0; j<$colTwoNum; j++))
+    do
+
+      for ((k=0; k<$rowOneNum; k++))
+      do
+        tempRowNum="$(cat tempMat1$1$$ |cut -f $k)"
+        tempColNum="$(cat tempMat2$j$$ | head -n "$k" | tail -n 1)"
+        product= $(( product + tempRowNum * tempColNum ))
+      done
+      cat product >> $matrixMult
+    done
+done
+}
+
 
 trapCatch()
 {
@@ -261,100 +305,57 @@ trapCatch()
   #Since dims and mean both only need one matrix will check to see if dims or mean was passed
   #as the first argument before checking the number of matrices passed
   if [ $1 = "dims" ] || [ $1 = "transpose" ] || [ $1 = "mean" ]
+  then
+
+    #print to stderr if too many arguments are passed in
+    if (( $# > 2 ))
     then
-
-      #print to stderr if too many arguments are passed in
-      if (( $# > 2 ))
-      then
-          echo "Too many arguments for $1" 1>&2
-          exit 1
-      fi
-
-      #check to see if anything was passed in with function name
-      if [ $# -eq 1 ]
-        then
-           matrixFile=temp
-           cat > $matrixFile
-
-      fi
-    
-
-      #print to stderr if the file is not readable
-      #source on how to tell a file is readable
-      #https://askubuntu.com/questions/558977/checking-for-a-file-and-whether-it-is-readable-and-writable
-      if [ ! -r $2 ]
-      then
-       echo "$2 is not a readable file" 1>&2
-       exit 1
-      fi
-
-
-      if [ $# -gt 1 ]
-      then
-         matrixFile=$2
-       fi
-
-
-      if [ $1 = "dims" ]
-      then
-        dims $matrixFile
-      fi
-
-      if [ $1 = "mean" ]
-      then
-	      mean $matrixFile
-      fi
-
-      if [ $1 = "transpose" ]
-      then
-        transpose $matrixFile
-      fi
-
-
+        echo "Too many arguments for $1" 1>&2
+        exit 1
     fi
 
-    #ADD
-    if [ $1 = "add" ]
+    #check to see if anything was passed in with function name
+    if [ $# -eq 1 ]
+      then
+         matrixFile=temp
+         cat > $matrixFile
+
+    fi
+  
+
+    #print to stderr if the file is not readable
+    #source on how to tell a file is readable
+    #https://askubuntu.com/questions/558977/checking-for-a-file-and-whether-it-is-readable-and-writable
+    if [ ! -r $2 ]
     then
+     echo "$2 is not a readable file" 1>&2
+     exit 1
+    fi
 
-      #Check to see if enough arguments have been passed
-      if [ $# -ne 3 ]
-      then
-        echo "Invalid number of arguments" 1>&2
-        exit 1
-      fi
 
-      #Check to see that both files are readable
-      if [ ! -r $2 ] || [ ! -r $3 ]
-      then
-        echo "One or more of your files are not readable" 1>&2
-        exit 1
-      fi
+    if [ $# -gt 1 ]
+    then
+       matrixFile=$2
+     fi
 
-      if [ $# -eq 3 ]
-      then
-         matrixOne=$2
-         matrixTwo=$3
-      fi
 
-      #grab row and column for each matrix                                                                
-      colMatOne=$( head -n 1 $matrixOne | wc -w)  
-      rowMatOne=$(wc -l < $matrixOne)
-      colMatTwo=$( head -n 1 $matrixTwo | wc -w)                              
-      rowMatTwo=$(wc -l < $matrixTwo)  
+    if [ $1 = "dims" ]
+    then
+      dims $matrixFile
+    fi
 
-      #compare the rows and columns to make sure they are the same dimension
-      if [ $colMatOne -ne $colMatTwo ] || [ $rowMatOne -ne $rowMatTwo ]
-      then
-         echo "Matrices not the same dimension" 1>&2
-         exit 1
-      fi
+    if [ $1 = "mean" ]
+    then
+      mean $matrixFile
+    fi
 
-  add $matrixOne $matrixTwo
-  fi
+    if [ $1 = "transpose" ]
+    then
+      transpose $matrixFile
+    fi
 
-  #Multiply
-  if [ $1 = "multiply" ]
+
+  elif [ $1 = "add" ]
   then
 
     #Check to see if enough arguments have been passed
@@ -377,6 +378,44 @@ trapCatch()
        matrixTwo=$3
     fi
 
+    #grab row and column for each matrix                                                                
+    colMatOne=$( head -n 1 $matrixOne | wc -w)  
+    rowMatOne=$(wc -l < $matrixOne)
+    colMatTwo=$( head -n 1 $matrixTwo | wc -w)                              
+    rowMatTwo=$(wc -l < $matrixTwo)  
+
+    #compare the rows and columns to make sure they are the same dimension
+    if [ $colMatOne -ne $colMatTwo ] || [ $rowMatOne -ne $rowMatTwo ]
+    then
+       echo "Matrices not the same dimension" 1>&2
+       exit 1
+    fi
+
+    add $matrixOne $matrixTwo
+  
+  elif [ $1 = "multiply" ]
+  then
+
+    #Check to see if enough arguments have been passed
+    if [ $# -ne 3 ]
+    then
+      echo "Invalid number of arguments" 1>&2
+      exit 1
+    fi
+
+    #Check to see that both files are readable
+    if [ ! -r $2 ] || [ ! -r $3 ]
+    then
+      echo "One or more of your files are not readable" 1>&2
+      exit 1
+    fi 
+
+    if [ $# -eq 3 ]
+    then
+       matrixOne=$2
+       matrixTwo=$3
+    fi
+
     #grab row number from first matrix and column count for second matrix                                                                
     
     colMatOne=$( head -n 1 $matrixOne | wc -w)  
@@ -385,13 +424,16 @@ trapCatch()
     rowMatTwo=$(wc -l < $matrixTwo)                             
 
     #compare the rows and columns to make sure they are the same dimension
-    if [ $rowMatOne -ne $colMatTwo ] || [ $rowMatTwo -ne $colMatOne ]
+    if [ $rowMatTwo -ne $colMatOne ]
     then
        echo "Number of rows from one matrix must match the number of columns from the other matrix" 1>&2
        exit 1
     fi
 
-multiply $matrixOne $matrixTwo
+  multiply $matrixOne $matrixTwo
+else
+  echo "Bad command" 1>&2
+  exit 1
 fi
 
 
