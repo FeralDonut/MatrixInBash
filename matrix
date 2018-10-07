@@ -7,6 +7,7 @@
 #   dims MATRIXONE
 # DESCRIPTION
 #   Prints a matrix size ROWS COLS
+dims()
 {
   #count rows
   #reference for wc -l https://www.tecmint.com/wc-command-examples/
@@ -269,6 +270,12 @@ done
 cat tempMultMat
 }
 
+# NAME
+#   multiply - generates a matrix comprised of the product of two matrices
+# SYNOPSIS
+#   generate MATRIXONE MATRIXTWO
+# DESCRIPTION
+#   multiplies two matrices together and outputs the products as a separate matrix
 multiply()
 {
   touch tempMatrix_0$$
