@@ -1,8 +1,12 @@
 #!/bin/bash
 
 
-#function for dims
-dims()
+# NAME
+#   dims - calculates number or rows and columns in a given matrix
+# SYNPOSIS
+#   dims MATRIXONE
+# DESCRIPTION
+#   Prints a matrix size ROWS COLS
 {
   #count rows
   #reference for wc -l https://www.tecmint.com/wc-command-examples/
@@ -15,7 +19,12 @@ dims()
 
 }
 
-
+# NAME
+#   transpose - transpose a matrix along its vector
+# SYNOPSIS
+#   tranpose MATRIXONE
+# DESCRIPTION
+#   Prints a transposed matrix along its vector
 transpose()
 {
 
@@ -45,6 +54,12 @@ transpose()
   rm -f tempRow*
 }
 
+# NAME
+#   mean - gives the mean values of a matrix
+# SYNOPSIS
+#   mean MATRIXONE
+# DESCRIPTION
+#   calculates the mean of each column in the matrix and prints it to a new matrix
 mean ()
 {
   tempMean="temporaryMeanFile"
@@ -85,7 +100,7 @@ mean ()
   else
     cat $tempMean > $tempRow
   fi
-  #send the temp files on a dumpster dive
+
   cat $tempRow 
 
 
@@ -102,6 +117,12 @@ rm -f temp*
 
 }
 
+# NAME
+#   add - adds two matrices together that match in size
+# SYNOPSIS
+#   add MATRIXONE MATRIXTWO
+# DESCRIPTION
+#   Prints a matrix of the summation of two matrices
 add()
 {
   touch tempMatrix_0$$
@@ -135,6 +156,7 @@ add()
       j=$((j+1))
     done
 
+    #reference for paste: https://ss64.com/bash/paste.html
     paste tempMatrix_$num$$ tempAddMat$i$$ > tempMatrix_$i$$
 
     #increment the counter
@@ -210,8 +232,6 @@ for ((i=0; i<$rowOneNum; i++))
 do
     for ((j=0; j<$colTwoNum; j++))
     do
-
-       
 result=0
         for ((k=0; k<$rowOneNum; k++))
         do
@@ -251,10 +271,7 @@ cat tempMultMat
 
 multiply()
 {
-  
-  n=0
-  m=0
-  product=0
+  touch tempMatrix_0$$
   #count the number of columns by counting elements in the first line of the matrixFile
   colOneNum=$( head -n 1 $matrixOne | wc -w) 
   colTwoNum=$( head -n 1 $matrixTwo | wc -w) 
@@ -263,33 +280,90 @@ multiply()
   rowOneNum="$(wc -l < $matrixOne )"
   rowTwoNum="$(wc -l < $matrixTwo )"
 
+  i=0
+  #iterate over the columns of the second matrix
+  while [ $i -lt $colTwoNum ]
+  do
+    i=$((i+1))
+    num=$((i-1))
+    cat $matrixTwo | cut -f "$i" > tempHolder$$
+    cat tempHolder$$ | ./matrix transpose > tempMult2$$
+    
+    #iterate over the rows of the first matrix
+    j=0
+    while [ $j -lt $rowOneNum ]
+    do
+      j=$((j+1))
+      cat $matrixOne | head -"$j" | tail -1 > tempMult1$$
+      
+      k=0
+      product=0
+      while [ $k -lt $colOneNum ]
+      do
+        k=$((k+1))
+        tempRowValue="$(cat tempMult1$$ | cut -f "$k")"
+        tempColValue="$(cat tempMult2$$ | cut -f "$k")"
+        product=$(( product + tempRowValue * tempColValue ))
+      done
+      echo "$product" >> tempMultThree$i$$ 
+    done
+    paste tempMatrix_$num$$ tempMultMatThree$i$$ > tempMatrix_$i$$
+  done
+         
+  emptyTab=$((colTwoNum+1))
+  #cut the emtpy tab that shows up at the beginning
+  cat tempMatrix_$colTwoNum$$ | cut -f 2-"$emptyTab" > tempFinalMat$$ 
+  #send the temp files on a dumpster dive
+
+  cat tempFinalMat$$ 
+}
+
+oldMult()
+{
+
   #cut rows from matrixOne
   while [ $n -le $rowOneNum ]
   do
-    num=$((n-1))
-    cat $matrixOne | head -n $n > tempMat1$1$$
+    n=$((n+1))
+   #  cat $matrixOne | ./matrix transpose > tempHolder$i$$
+    # cat tempHolder$i$$ | cut -f "$n" | tr '\t' '\n' |  tempMat1$i$$
+    cat $matrixOne | cut -f "$n" > tempHolder$i
+    cat tempHolder$i | ./matrix transpose > tempMat1$i$$
+
+    i=$((i+1))
   done
+
+
   #cut columns from matrixTwo
   while [ $m -le $colTwoNum ]
   do
-    num=$((m-1))
+    m=$((m+1))
     cat $matrixTwo | cut -f "$m" > tempMat2$j$$ 
+    j=$((j+1))
+
  done
 
 for ((i=0; i<$rowOneNum; i++))
 do
-    
+    product=0
     for ((j=0; j<$colTwoNum; j++))
     do
-
-      for ((k=0; k<$rowOneNum; k++))
+      
+      for ((k=0; k<$colOneNum; k++))
       do
-        tempRowNum="$(cat tempMat1$1$$ |cut -f $k)"
-        tempColNum="$(cat tempMat2$j$$ | head -n "$k" | tail -n 1)"
-        product= $(( product + tempRowNum * tempColNum ))
+echo "k = $k"       
+        tempRowNum="$(cat tempMat1$i$$ | head -n "$(($k+1))" | tail -n 1)"
+        tempColNum="$(cat tempMat2$j$$ | head -n "$(($k+1))" | tail -n 1)"
+echo "tempRowNum = $tempRowNum && tempColNum = $tempColNum"      
+  product=$(( product + tempRowNum * tempColNum ))
       done
-      cat product >> $matrixMult
+      echo "$product" >> "$tempMatrixMult"
+      if [ $j -ne $colTwoNum ]
+      then
+        echo -n -e "\t" >>tempMatrixMult
+      fi
     done
+    cat $tempMatrixMult
 done
 }
 
