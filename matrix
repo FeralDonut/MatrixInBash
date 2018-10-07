@@ -191,9 +191,7 @@ multiply()
  rowOneNum="$(wc -l < $matrixOne )"
  rowTwoNum="$(wc -l < $matrixTwo )"
 
- # Output File
- tempMultFile="tempFile$$"
- touch $outputFile
+ touch $outputFile$$
 
 
  for((i=1; i<=$rowOneNum; i++ ))
@@ -210,13 +208,13 @@ multiply()
    #check to see if we need a newline or not
    if [ $j -lt $colTwoNum ]
    then
-    echo -n -e "$val\t" >> $tempMultFile
+    echo -n -e "$val\t" >> $tempMultFile$$
    else
-    echo "$val" >> $tempMultFile
+    echo "$val" >> $tempMultFile$$
    fi
   done # End of col loop
  done # End of row loop
- cat $tempMultFile
+ cat $tempMultFile$$
 
 
 
