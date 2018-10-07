@@ -126,7 +126,7 @@ rm -f temp*
 #   Prints a matrix of the summation of two matrices
 add()
 {
-  touch tempMatrix_0$$
+  touch tempMatrix0$$
   #count the number of columns by counting elements in the first line of the matrixFile
   colNum=$( head -n 1 $matrixOne | wc -w) 
   rowNum="$(wc -l < $matrixOne )" 
@@ -158,7 +158,7 @@ add()
     done
 
     #reference for paste: https://ss64.com/bash/paste.html
-    paste tempMatrix_$num$$ tempAddMat$i$$ > tempMatrix_$i$$
+    paste tempMatrix$num$$ tempAddMat$i$$ > tempMatrix$i$$
 
     #increment the counter
     i=$((i+1))
@@ -166,10 +166,114 @@ add()
 
   emptyTab=$((colNum+1))
   #cut the emtpy tab that shows up at the beginning
-  cat tempMatrix_$colNum$$ | cut -f 2-"$emptyTab" > tempSumMat$$ 
+  cat tempMatrix$colNum$$ | cut -f 2-"$emptyTab" > tempSumMat$$ 
   #send the temp files on a dumpster dive
 
   cat tempSumMat$$
+}
+
+
+# NAME
+#   multiply - generates a matrix comprised of the product of two matrices
+# SYNOPSIS
+#   generate MATRIXONE MATRIXTWO
+# DESCRIPTION
+#   multiplies two matrices together and outputs the products as a separate matrix
+
+multiply()
+{
+ 
+ #count the number of columns by counting elements in the first line of the matrixFile
+ colOneNum=$( head -n 1 $matrixOne | wc -w)
+ colTwoNum=$( head -n 1 $matrixTwo | wc -w)
+
+ #count the number of rows in each matrix
+ rowOneNum="$(wc -l < $matrixOne )"
+ rowTwoNum="$(wc -l < $matrixTwo )"
+
+ # Output File
+ tempMultFile="tempFile$$"
+ touch $outputFile
+
+
+ for((i=1; i<=$rowOneNum; i++ ))
+ do
+  for((j=1; j<=$colTwoNum; j++))
+  do
+   val=0
+   for((k=1; k<=$rowOneNum; k++))
+   do
+    m1Val="$(head -n $i $matrixOne | tail -n 1 | cut -f $k)"
+    m2Val="$(head -n $k $matrixTwo | tail -n 1 | cut -f $j)"
+    val=$((val + m1Val * m2Val))
+   done 
+   #check to see if we need a newline or not
+   if [ $j -lt $colTwoNum ]
+   then
+    echo -n -e "$val\t" >> $tempMultFile
+   else
+    echo "$val" >> $tempMultFile
+   fi
+  done # End of col loop
+ done # End of row loop
+ cat $tempMultFile
+
+
+
+
+}
+
+
+multiply2()
+{
+  touch tempMatrix0$$
+  #count the number of columns by counting elements in the first line of the matrixFile
+  colOneNum=$( head -n 1 $matrixOne | wc -w) 
+  colTwoNum=$( head -n 1 $matrixTwo | wc -w) 
+
+  #count the number of rows in each matrix
+  rowOneNum="$(wc -l < $matrixOne )"
+  rowTwoNum="$(wc -l < $matrixTwo )"
+
+  i=0
+  #iterate over the columns of the second matrix
+  while [ $i -lt $colTwoNum ]
+  do
+    i=$((i+1))
+    num=$((i-1))
+
+  #  cat $matrixTwo | cut -f "$i" > tempHolder$$
+   # cat tempHolder$$ | ./matrix transpose > tempMult2$$
+    cat $matrixTwo | cut -f "$i" |./matrix transpose > tempMult2$$
+
+   echo "made file $tempMult2$$" 
+    #iterate over the rows of the first matrix
+    j=0
+    while [ $j -lt $rowOneNum ]
+    do
+      j=$((j+1))
+      cat $matrixOne | head -"$j" | tail -1 > tempMult1$$
+      
+      k=0
+      product=0
+      while [ $k -lt $colOneNum ]
+      do
+        k=$((k+1))
+        tempRowValue="$(cat tempMult1$$ | cut -f "$k")"
+        tempColValue="$(cat tempMult2$$ | cut -f "$k")"
+        product=$(( product + tempRowValue * tempColValue ))
+      done
+      echo "$product" >> tempMultThree$i$$ 
+    done
+    paste tempMatrix$num$$ tempMultMatThree$i$$ > tempMatrix$i$$
+  done
+         
+  emptyTab=$((colTwoNum+1))
+  #cut the emtpy tab that shows up at the beginning
+  cat tempMatrix$colTwoNum$$ | cut -f 2-"$emptyTab" > tempFinalMat$$ 
+  #send the temp files on a dumpster dive
+
+  cat tempFinalMat$$ 
 }
 
 multiplyLEP()
@@ -270,116 +374,7 @@ done
 cat tempMultMat
 }
 
-# NAME
-#   multiply - generates a matrix comprised of the product of two matrices
-# SYNOPSIS
-#   generate MATRIXONE MATRIXTWO
-# DESCRIPTION
-#   multiplies two matrices together and outputs the products as a separate matrix
-multiply()
-{
-  touch tempMatrix_0$$
-  #count the number of columns by counting elements in the first line of the matrixFile
-  colOneNum=$( head -n 1 $matrixOne | wc -w) 
-  colTwoNum=$( head -n 1 $matrixTwo | wc -w) 
 
-  #count the number of rows in each matrix
-  rowOneNum="$(wc -l < $matrixOne )"
-  rowTwoNum="$(wc -l < $matrixTwo )"
-
-  i=0
-  #iterate over the columns of the second matrix
-  while [ $i -lt $colTwoNum ]
-  do
-    i=$((i+1))
-    num=$((i-1))
-    cat $matrixTwo | cut -f "$i" > tempHolder$$
-    cat tempHolder$$ | ./matrix transpose > tempMult2$$
-    
-    #iterate over the rows of the first matrix
-    j=0
-    while [ $j -lt $rowOneNum ]
-    do
-      j=$((j+1))
-      cat $matrixOne | head -"$j" | tail -1 > tempMult1$$
-      
-      k=0
-      product=0
-      while [ $k -lt $colOneNum ]
-      do
-        k=$((k+1))
-        tempRowValue="$(cat tempMult1$$ | cut -f "$k")"
-        tempColValue="$(cat tempMult2$$ | cut -f "$k")"
-        product=$(( product + tempRowValue * tempColValue ))
-      done
-      echo "$product" >> tempMultThree$i$$ 
-    done
-    paste tempMatrix_$num$$ tempMultMatThree$i$$ > tempMatrix_$i$$
-  done
-         
-  emptyTab=$((colTwoNum+1))
-  #cut the emtpy tab that shows up at the beginning
-  cat tempMatrix_$colTwoNum$$ | cut -f 2-"$emptyTab" > tempFinalMat$$ 
-  #send the temp files on a dumpster dive
-
-  cat tempFinalMat$$ 
-}
-
-oldMult()
-{
-
-  #cut rows from matrixOne
-  while [ $n -le $rowOneNum ]
-  do
-    n=$((n+1))
-   #  cat $matrixOne | ./matrix transpose > tempHolder$i$$
-    # cat tempHolder$i$$ | cut -f "$n" | tr '\t' '\n' |  tempMat1$i$$
-    cat $matrixOne | cut -f "$n" > tempHolder$i
-    cat tempHolder$i | ./matrix transpose > tempMat1$i$$
-
-    i=$((i+1))
-  done
-
-
-  #cut columns from matrixTwo
-  while [ $m -le $colTwoNum ]
-  do
-    m=$((m+1))
-    cat $matrixTwo | cut -f "$m" > tempMat2$j$$ 
-    j=$((j+1))
-
- done
-
-for ((i=0; i<$rowOneNum; i++))
-do
-    product=0
-    for ((j=0; j<$colTwoNum; j++))
-    do
-      
-      for ((k=0; k<$colOneNum; k++))
-      do
-echo "k = $k"       
-        tempRowNum="$(cat tempMat1$i$$ | head -n "$(($k+1))" | tail -n 1)"
-        tempColNum="$(cat tempMat2$j$$ | head -n "$(($k+1))" | tail -n 1)"
-echo "tempRowNum = $tempRowNum && tempColNum = $tempColNum"      
-  product=$(( product + tempRowNum * tempColNum ))
-      done
-      echo "$product" >> "$tempMatrixMult"
-      if [ $j -ne $colTwoNum ]
-      then
-        echo -n -e "\t" >>tempMatrixMult
-      fi
-    done
-    cat $tempMatrixMult
-done
-}
-
-
-trapCatch()
-{
-  rm -f temp*
-  exit 1
-}
 
   #DIMS & TRANSPOSE & MEAN
 
