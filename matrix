@@ -52,7 +52,6 @@ transpose()
   done
   cat tempRow2$$
 
-  rm -f tempRow*
 }
 
 # NAME
@@ -94,23 +93,16 @@ mean ()
 
   if [ $i -lt  $((colNum)) ]
   then
-  
-  emptyTab=$((colNum+1))
+    emptyTab=$((colNum+1))
     #cut the emtpy tab that shows up at the beginning
     cat $tempMean | cut -f 2-"$emptyTab" | tr "\n" "\t" > $tempRow
   else
     cat $tempMean > $tempRow
   fi
-
   cat $tempRow 
-
-
   #increment the counter
-    i=$((i+1))
-
+  i=$((i+1))
 done
-
-#new line
 
 
 rm -f temp*
@@ -146,20 +138,15 @@ add()
       #set two numbers to be added together to appropriate variables
       tempNum1="$(cat tempMat1$$ | head -n "$j" | tail -n 1)"
       tempNum2="$(cat tempMat2$$ | head -n "$j" | tail -n 1)"
-      
       #sum the two numbers together
       sum=`expr $tempNum1 + $tempNum2`
-
       #store sum in a third file using PID
       echo "$sum" >> tempAddMat$i$$
-
       #increment counter
       j=$((j+1))
     done
-
     #reference for paste: https://ss64.com/bash/paste.html
     paste tempMatrix$num$$ tempAddMat$i$$ > tempMatrix$i$$
-
     #increment the counter
     i=$((i+1))
   done
@@ -191,14 +178,15 @@ multiply()
  rowOneNum="$(wc -l < $matrixOne )"
  rowTwoNum="$(wc -l < $matrixTwo )"
 
- touch $outputFile$$
-
-
+ #loop for row position
  for((i=1; i<=$rowOneNum; i++ ))
  do
+  #loop for column position
   for((j=1; j<=$colTwoNum; j++))
   do
+   #set the val back to 0 before moving to the next row-col of calculations
    val=0
+   #loop to grab the proper row/column numbers to be multiplied together
    for((k=1; k<=$rowOneNum; k++))
    do
     m1Val="$(head -n $i $matrixOne | tail -n 1 | cut -f $k)"
@@ -208,13 +196,13 @@ multiply()
    #check to see if we need a newline or not
    if [ $j -lt $colTwoNum ]
    then
-    echo -n -e "$val\t" >> $tempMultFile$$
+    echo -n -e "$val\t" >> tempMultFile$$
    else
-    echo "$val" >> $tempMultFile$$
+    echo "$val" >> tempMultFile$$
    fi
-  done # End of col loop
- done # End of row loop
- cat $tempMultFile$$
+  done 
+ done 
+ cat tempMultFile$$
 
 
 
@@ -222,155 +210,9 @@ multiply()
 }
 
 
-multiply2()
-{
-  touch tempMatrix0$$
-  #count the number of columns by counting elements in the first line of the matrixFile
-  colOneNum=$( head -n 1 $matrixOne | wc -w) 
-  colTwoNum=$( head -n 1 $matrixTwo | wc -w) 
-
-  #count the number of rows in each matrix
-  rowOneNum="$(wc -l < $matrixOne )"
-  rowTwoNum="$(wc -l < $matrixTwo )"
-
-  i=0
-  #iterate over the columns of the second matrix
-  while [ $i -lt $colTwoNum ]
-  do
-    i=$((i+1))
-    num=$((i-1))
-
-  #  cat $matrixTwo | cut -f "$i" > tempHolder$$
-   # cat tempHolder$$ | ./matrix transpose > tempMult2$$
-    cat $matrixTwo | cut -f "$i" |./matrix transpose > tempMult2$$
-
-   echo "made file $tempMult2$$" 
-    #iterate over the rows of the first matrix
-    j=0
-    while [ $j -lt $rowOneNum ]
-    do
-      j=$((j+1))
-      cat $matrixOne | head -"$j" | tail -1 > tempMult1$$
-      
-      k=0
-      product=0
-      while [ $k -lt $colOneNum ]
-      do
-        k=$((k+1))
-        tempRowValue="$(cat tempMult1$$ | cut -f "$k")"
-        tempColValue="$(cat tempMult2$$ | cut -f "$k")"
-        product=$(( product + tempRowValue * tempColValue ))
-      done
-      echo "$product" >> tempMultThree$i$$ 
-    done
-    paste tempMatrix$num$$ tempMultMatThree$i$$ > tempMatrix$i$$
-  done
-         
-  emptyTab=$((colTwoNum+1))
-  #cut the emtpy tab that shows up at the beginning
-  cat tempMatrix$colTwoNum$$ | cut -f 2-"$emptyTab" > tempFinalMat$$ 
-  #send the temp files on a dumpster dive
-
-  cat tempFinalMat$$ 
-}
-
-multiplyLEP()
-{
-
-
-  i=1
-
-  #count the number of columns by counting elements in the first line of the matrixFile
-  colOneNum=$( head -n 1 $matrixOne | wc -w) 
-  colTwoNum=$( head -n 1 $matrixTwo | wc -w) 
-
-  #count the number of rows in each matrix
-  rowOneNum="$(wc -l < $matrixOne )"
-  rowTwoNum="$(wc -l < $matrixTwo )"
-
-#read in matrixOne into an array   
-for((i=0;i<$rowOneNum;i++ ))
-do
-
-    j=$((i+1))
-   
-    the_row="$(cat $matrixOne | head -n $j | tail -n 1)"
-    echo $the_row > aa
-    for((ii=0;ii<$colOneNum;ii++ ))
-    do
-
-        jj=$((ii+1))
-        #cutting the column
-        varb=$(cut -f $jj -d " " aa)
-        #calculating the index spot
-        index=$((i*colOneNum+ii))
-        #placing into the array
-        mat1Array[$index]=$varb
-    done
-done
-
-
-#read in matrixTwo into an array   
-for((i=0;i<$rowTwoNum;i++ ))
-do
-    j=$((i+1))
-   
-    the_row="$(cat $matrixTwo | head -n $j | tail -n 1)"
-    echo $the_row > tempMat
-    for((ii=0;ii<$colTwoNum;ii++ ))
-    do
-        jj=$((ii+1))
-        #cutting the column
-        varb=$(cut -f $jj -d " " aa)
-        #calculating the index spot
-        index=$((i*colTwoNum+ii))
-        #placing into the array
-        mat2Array[$index]=$varb
-    done
-done
-
-
-
-for ((i=0; i<$rowOneNum; i++))
-do
-    for ((j=0; j<$colTwoNum; j++))
-    do
-result=0
-        for ((k=0; k<$rowOneNum; k++))
-        do
-          idx1=$(( i*rowOneNum+k ))
-
-          idx2=$(( k*colTwoNum+j ))
-
-          v1=${mat1Array[idx1]}
-          v2=${mat2Array[idx2]}
-          result=$(( result+v1*v2 ))
-
-
-        done
-
-        idx3=$(( i*$colTwoNum+j ))
-        product[$idx3]=$result
-    done
-done
-
-for ((i=0; i<$rowOneNum; i++))
-do
-    for ((j=0; j<$colTwoNum; j++))
-    do
-      idx3=$(( i*$colTwoNum+j ))
-      echo -n ${product[idx3]} >> tempMultMat
-
-      if [ $j -lt $(( colTwoNum-1 )) ]
-      then
-        echo -n -e "\t" >> tempMultMat
-      else
-        echo "" >> tempMultMat
-      fi
-    done
-done
-cat tempMultMat
-}
+##################################################################################
+#Main
+##################################################################################
 
 
 
